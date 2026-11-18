@@ -1,0 +1,49 @@
+server:
+  port: 8090
+
+spring:
+  config:
+    # Local secrets (DB password, Twilio keys) live in application-secrets.yml, which is git-ignored.
+    import: "optional:classpath:application-secrets.yml"
+  application:
+    name: homeplate
+  datasource:
+    url: jdbc:mysql://localhost:3306/homeplate?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+    username: ${DB_USERNAME:root}
+    password: "${DB_PASSWORD:}"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: true
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Kolkata
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Asia/Kolkata
+
+homeplate:
+  jwt:
+    secret: ${JWT_SECRET:aG9tZXBsYXRlLXN1cGVyLXNlY3JldC1rZXktY2hhbmdlLWluLXByb2R1Y3Rpb24tMjAyNg==}
+    expiration-hours: 72
+  upload-dir: ${UPLOAD_DIR:uploads}
+  timezone: Asia/Kolkata
+  # When true, OTPs are returned in the API response (no SMS provider configured yet).
+  # Set to false once Twilio credentials are configured.
+  dev-otp: true
+  twilio:
+    enabled: false
+    account-sid: ${TWILIO_ACCOUNT_SID:}
+    auth-token: ${TWILIO_AUTH_TOKEN:}
+    from-number: ${TWILIO_FROM_NUMBER:}
+  cors-origins: http://localhost:5173,http://127.0.0.1:5173
+
+logging:
+  level:
+    com.homeplate: INFO
