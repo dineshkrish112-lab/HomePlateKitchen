@@ -26,8 +26,11 @@ Requirements: JDK 17+ (you have 25), Node 18+, MySQL running on `localhost:3306`
    Double-click `start-backend.bat`, or:
    ```bash
    cd backend
-   mvn spring-boot:run
+   .\mvnw.cmd spring-boot:run      # Windows (PowerShell / CMD)
+   ./mvnw spring-boot:run          # Git Bash / macOS / Linux
    ```
+   No Maven install needed - the Maven Wrapper downloads it on first run. Only a JDK 17+ is required
+   (`java -version` must work; if not, set `JAVA_HOME` to the JDK folder).
    The database `homeplate` is created automatically on first start with only the super admin and subscription plans.
    For a demo with sample kitchens/customers/orders start once with `SEED_DEMO_DATA=true` on an empty database
    (demo logins: `kitchenowner`/`kitchenowner`, `user`/`user`, other kitchens `kitchen123`, customers `user123`).

@@ -1,10 +1,15 @@
 @echo off
 title HomePlate Backend (port 8090)
 cd /d "%~dp0backend"
-where mvn >nul 2>nul
-if %errorlevel%==0 (
-  mvn spring-boot:run
-) else (
-  "%USERPROFILE%\.m2\wrapper\dists\apache-maven-3.10.0\dae9a06d\bin\mvn.cmd" spring-boot:run
+if not exist "src\main\resources\application-secrets.yml" (
+  echo.
+  echo  application-secrets.yml is missing.
+  echo  Copy backend\src\main\resources\application-secrets.example.yml to application-secrets.yml
+  echo  and put your MySQL password in it, then run this again.
+  echo.
+  pause
+  exit /b 1
 )
+rem Maven Wrapper: downloads Maven automatically on first run, only a JDK 17+ is needed.
+call mvnw.cmd spring-boot:run
 pause
