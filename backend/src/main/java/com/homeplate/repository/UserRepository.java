@@ -9,6 +9,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
     boolean existsByUsername(String username);
     Optional<User> findFirstByPhone(String phone);
+    boolean existsByPhone(String phone);
+    boolean existsByEmailIgnoreCase(String email);
     List<User> findByRoleOrderByCreatedAtDesc(Role role);
     long countByRole(Role role);
     long countByRoleAndCreatedAtBetween(Role role, LocalDateTime from, LocalDateTime to);

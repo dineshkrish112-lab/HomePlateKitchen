@@ -19,6 +19,7 @@ import Profile from './pages/customer/Profile';
 import LoginPage from './pages/auth/LoginPage';
 import CustomerRegister from './pages/auth/CustomerRegister';
 import KitchenRegister from './pages/auth/KitchenRegister';
+import ForgotPassword from './pages/auth/ForgotPassword';
 
 // Portals are code-split
 const KitchenPortal = lazy(() => import('./pages/kitchen/KitchenPortal'));
@@ -46,6 +47,8 @@ export default function App() {
         <Route path="/kitchen/login" element={<LoginPage portal="kitchen" />} />
         <Route path="/kitchen/register" element={<KitchenRegister />} />
         <Route path="/admin/login" element={<LoginPage portal="admin" />} />
+        <Route path="/forgot-password" element={<ForgotPassword portal="customer" />} />
+        <Route path="/kitchen/forgot-password" element={<ForgotPassword portal="kitchen" />} />
 
         <Route path="/kitchen/*" element={<ProtectedRoute role="KITCHEN_OWNER"><KitchenPortal /></ProtectedRoute>} />
         <Route path="/admin/*" element={<ProtectedRoute role="ADMIN"><AdminPortal /></ProtectedRoute>} />

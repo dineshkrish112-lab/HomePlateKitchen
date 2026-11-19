@@ -34,14 +34,32 @@ homeplate:
     expiration-hours: 72
   upload-dir: ${UPLOAD_DIR:uploads}
   timezone: Asia/Kolkata
-  # When true, OTPs are returned in the API response (no SMS provider configured yet).
-  # Set to false once Twilio credentials are configured.
-  dev-otp: true
+  # Only used when NO provider is configured for a channel: the OTP is then shown on screen.
+  # Keep false in production so registration always needs a real SMS / email.
+  dev-otp: ${DEV_OTP:false}
+  otp:
+    # Testing only: these numbers skip Twilio and accept test-code. Keep EMPTY in production.
+    test-numbers: ${OTP_TEST_NUMBERS:}
+    test-code: ${OTP_TEST_CODE:123456}
+  # Fills the database with sample kitchens, customers and orders (demo only). Production: false.
+  seed-demo-data: ${SEED_DEMO_DATA:false}
   twilio:
-    enabled: false
+    enabled: ${TWILIO_ENABLED:false}
     account-sid: ${TWILIO_ACCOUNT_SID:}
+    # API key (recommended) - create in Twilio Console > Account > API keys & tokens
+    api-key-sid: ${TWILIO_API_KEY_SID:}
+    api-key-secret: ${TWILIO_API_KEY_SECRET:}
+    # Alternative to the API key
     auth-token: ${TWILIO_AUTH_TOKEN:}
+    # Twilio Verify service used for SMS OTP (VA...)
+    verify-service-sid: ${TWILIO_VERIFY_SERVICE_SID:}
+    # Optional: number for order notification SMS (not needed for OTP)
     from-number: ${TWILIO_FROM_NUMBER:}
+  mail:
+    # Email OTP + notifications. Either Twilio SendGrid (api key) or SMTP (spring.mail.*).
+    from: ${MAIL_FROM:}
+    from-name: HomePlate
+    sendgrid-api-key: ${SENDGRID_API_KEY:}
   cors-origins: http://localhost:5173,http://127.0.0.1:5173
 
 logging:

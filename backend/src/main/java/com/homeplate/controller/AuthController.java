@@ -64,37 +64,63 @@ public class AuthController {
         return session(u);
     }
 
+    /** Tells the UI which OTP channels are live. */
+    @GetMapping("/otp/config")
+    public Map<String, Object> otpConfig() {
+        return Map.of("sms", otp.smsLive(), "email", otp.emailLive(),
+                "emailRequired", otp.emailRequired(), "devMode", otp.devMode());
+    }
+
     @PostMapping("/otp/send")
-    public Map<String, Object> sendOtp(@Valid @RequestBody Dtos.OtpSendRequest req) {
-        String code = otp.send(req.phone());
+    public Map<String, Object> sendOtp(@RequestBody Dtos.OtpSendRequest req) {
+        OtpService.Channel ch = OtpService.channel(req.channel());
+        String target = target(req.target(), req.phone());
+        String code = otp.send(ch, target);
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("sent", true);
-        m.put("message", "OTP sent to " + req.phone());
-        if (code != null) m.put("devOtp", code); // only while no SMS provider is configured
+        m.put("message", ch == OtpService.Channel.SMS ? "OTP sent to +91 " + target : "OTP sent to " + target);
+        if (code != null) m.put("devOtp", code); // only in dev mode when the channel has no provider
         return m;
     }
 
     @PostMapping("/otp/verify")
     public Map<String, Object> verifyOtp(@Valid @RequestBody Dtos.OtpVerifyRequest req) {
-        otp.verify(req.phone(), req.code());
+        otp.verify(OtpService.channel(req.channel()), target(req.target(), req.phone()), req.code());
         return Map.of("verified", true);
+    }
+
+    /** Forgot password: verify the registered mobile with OTP, then set a new password. */
+    @PostMapping("/password/reset")
+    @Transactional
+    public Map<String, Object> resetPassword(@Valid @RequestBody Dtos.ResetPasswordRequest req) {
+        String phone = digits(req.phone());
+        if (!otp.isVerified(OtpService.Channel.SMS, phone)) throw ApiException.badRequest("Please verify your mobile number with OTP first");
+        User u = users.findFirstByPhone(phone).orElseThrow(() -> ApiException.badRequest("No account is registered with this mobile number"));
+        if (u.getRole() == Role.ADMIN) throw ApiException.forbidden("Admin password can't be reset here");
+        u.setPassword(encoder.encode(req.newPassword()));
+        users.save(u);
+        otp.consume(OtpService.Channel.SMS, phone);
+        return Map.of("reset", true, "username", u.getUsername());
     }
 
     @PostMapping("/register/customer")
     @Transactional
     public Map<String, Object> registerCustomer(@Valid @RequestBody Dtos.RegisterCustomerRequest req) {
-        if (!otp.isVerified(req.phone())) throw ApiException.badRequest("Please verify your mobile number with OTP first");
-        if (users.existsByUsername(req.username().trim())) throw ApiException.badRequest("Username already taken");
+        String phone = digits(req.phone());
+        String email = req.email().trim().toLowerCase();
+        checkNewAccount(req.username(), phone, email);
         User u = new User();
         u.setUsername(req.username().trim());
         u.setPassword(encoder.encode(req.password()));
-        u.setFullName(req.fullName());
-        u.setPhone(req.phone());
-        u.setEmail(req.email());
+        u.setFullName(req.fullName().trim());
+        u.setPhone(phone);
+        u.setEmail(email);
         u.setHometown(req.hometown());
         u.setRole(Role.CUSTOMER);
         u.setPhoneVerified(true);
+        u.setEmailVerified(otp.isVerified(OtpService.Channel.EMAIL, email));
         users.save(u);
+        consume(phone, email);
         notify.sendEmail(u.getEmail(), "Welcome to HomePlate", "Hi " + u.getFullName() + ", a taste of home is now around the corner.");
         return session(u);
     }
@@ -102,25 +128,55 @@ public class AuthController {
     @PostMapping("/register/kitchen")
     @Transactional
     public Map<String, Object> registerKitchen(@Valid @RequestBody Dtos.RegisterKitchenRequest req) {
-        if (!otp.isVerified(req.phone())) throw ApiException.badRequest("Please verify your mobile number with OTP first");
-        if (users.existsByUsername(req.username().trim())) throw ApiException.badRequest("Username already taken");
+        String phone = digits(req.phone());
+        String email = req.email().trim().toLowerCase();
+        checkNewAccount(req.username(), phone, email);
         User u = new User();
         u.setUsername(req.username().trim());
         u.setPassword(encoder.encode(req.password()));
-        u.setFullName(req.fullName());
-        u.setPhone(req.phone());
-        u.setEmail(req.email());
+        u.setFullName(req.fullName().trim());
+        u.setPhone(phone);
+        u.setEmail(email);
         u.setRole(Role.KITCHEN_OWNER);
         u.setPhoneVerified(true);
+        u.setEmailVerified(otp.isVerified(OtpService.Channel.EMAIL, email));
         users.save(u);
         Kitchen k = new Kitchen();
         k.setOwner(u);
-        k.setName(req.kitchenName());
+        k.setName(req.kitchenName().trim());
         k.setStatus(Enums.KitchenStatus.PENDING);
         k.setPhoneVerified(true);
         k.setOnboardingStep(2);
         kitchens.save(k);
+        consume(phone, email);
+        notify.sendEmail(u.getEmail(), "Welcome to HomePlate Kitchen Partners",
+                "Hi " + u.getFullName() + ", your kitchen \"" + k.getName() + "\" is registered. Complete the onboarding steps to submit it for verification.");
         return session(u);
+    }
+
+    private void checkNewAccount(String username, String phone, String email) {
+        if (!otp.isVerified(OtpService.Channel.SMS, phone)) throw ApiException.badRequest("Please verify your mobile number with OTP first");
+        if (otp.emailRequired() && !otp.isVerified(OtpService.Channel.EMAIL, email))
+            throw ApiException.badRequest("Please verify your email address with OTP first");
+        if (users.existsByUsername(username.trim())) throw ApiException.badRequest("Username already taken");
+        if (users.existsByPhone(phone)) throw ApiException.badRequest("An account already exists with this mobile number. Please sign in or reset your password.");
+        if (users.existsByEmailIgnoreCase(email)) throw ApiException.badRequest("An account already exists with this email address");
+    }
+
+    private void consume(String phone, String email) {
+        otp.consume(OtpService.Channel.SMS, phone);
+        otp.consume(OtpService.Channel.EMAIL, email);
+    }
+
+    private static String target(String target, String phone) {
+        String t = target != null && !target.isBlank() ? target : phone;
+        if (t == null || t.isBlank()) throw ApiException.badRequest("Enter your mobile number or email");
+        return t.trim();
+    }
+
+    private static String digits(String phone) {
+        String d = phone == null ? "" : phone.replaceAll("[^0-9]", "");
+        return d.length() > 10 ? d.substring(d.length() - 10) : d;
     }
 
     @GetMapping("/me")

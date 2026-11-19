@@ -14,25 +14,28 @@ public final class Dtos {
 
     public record LoginRequest(@NotBlank String username, @NotBlank String password, String portal) {}
 
-    public record OtpSendRequest(@NotBlank String phone) {}
+    /** channel: "sms" (target = 10-digit mobile) or "email" (target = email address). */
+    public record OtpSendRequest(String channel, String target, String phone) {}
 
-    public record OtpVerifyRequest(@NotBlank String phone, @NotBlank String code) {}
+    public record OtpVerifyRequest(String channel, String target, String phone, @NotBlank String code) {}
 
     public record RegisterCustomerRequest(
             @NotBlank @Size(max = 120) String fullName,
             @NotBlank @Size(min = 3, max = 80) String username,
-            @NotBlank @Size(min = 4, max = 100) String password,
+            @NotBlank @Size(min = 6, max = 100) String password,
             @NotBlank String phone,
-            @Email String email,
+            @NotBlank @Email String email,
             String hometown) {}
 
     public record RegisterKitchenRequest(
             @NotBlank @Size(max = 120) String fullName,
             @NotBlank @Size(min = 3, max = 80) String username,
-            @NotBlank @Size(min = 4, max = 100) String password,
+            @NotBlank @Size(min = 6, max = 100) String password,
             @NotBlank String phone,
-            @Email String email,
+            @NotBlank @Email String email,
             @NotBlank @Size(max = 120) String kitchenName) {}
+
+    public record ResetPasswordRequest(@NotBlank String phone, @NotBlank @Size(min = 6, max = 100) String newPassword) {}
 
     public record ChangePasswordRequest(@NotBlank String currentPassword, @NotBlank @Size(min = 4) String newPassword) {}
 

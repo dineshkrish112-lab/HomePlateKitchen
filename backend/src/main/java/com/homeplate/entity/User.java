@@ -43,6 +43,8 @@ public class User {
 
     private boolean phoneVerified;
 
+    private boolean emailVerified;
+
     /** Default delivery address (customers). */
     @Column(length = 400)
     private String address;

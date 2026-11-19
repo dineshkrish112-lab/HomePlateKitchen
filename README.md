@@ -5,15 +5,13 @@ within 5 km, order today's homemade menu, or request a custom dish and pick the 
 
 Three portals on one backend:
 
-| Portal | URL | Demo login |
+| Portal | URL | Login |
 |---|---|---|
-| Customer | http://localhost:5173 → Login | `user` / `user` |
-| Kitchen Owner | http://localhost:5173/kitchen/login | `kitchenowner` / `kitchenowner` |
-| Super Admin | http://localhost:5173/admin/login | `owner` / `owner` |
+| Customer | http://localhost:5173 → Login | self sign-up with mobile OTP (+ email OTP when email is configured) |
+| Kitchen Owner | http://localhost:5173/kitchen/register | self sign-up with OTP, then 6-step onboarding + admin approval |
+| Super Admin | http://localhost:5173/admin/login | `owner` / `owner` (the only built-in account - change it before going live) |
 
-Other seeded kitchen owners: `annapoorna`, `chettinad`, `keralahome`, `madurai`, `andhra`, `sunita`,
-`gandhipuram`, `spicebox` (under review), `nallasoru` (under review), `paati` (approved), `quickbites` (suspended) —
-password `kitchen123`. Extra customers: `customer1` … `customer24`, password `user123`.
+Forgot password: `/forgot-password` and `/kitchen/forgot-password` (OTP to the registered mobile).
 
 ## Tech stack
 
@@ -30,7 +28,9 @@ Requirements: JDK 17+ (you have 25), Node 18+, MySQL running on `localhost:3306`
    cd backend
    mvn spring-boot:run
    ```
-   The database `homeplate` is created automatically and filled with sample data on first start.
+   The database `homeplate` is created automatically on first start with only the super admin and subscription plans.
+   For a demo with sample kitchens/customers/orders start once with `SEED_DEMO_DATA=true` on an empty database
+   (demo logins: `kitchenowner`/`kitchenowner`, `user`/`user`, other kitchens `kitchen123`, customers `user123`).
    **First time on a new machine:** copy `backend/src/main/resources/application-secrets.example.yml` to
    `application-secrets.yml` in the same folder and put your MySQL password there (this file is git-ignored).
    Alternatively set the `DB_USERNAME` / `DB_PASSWORD` environment variables.
@@ -45,7 +45,7 @@ Requirements: JDK 17+ (you have 25), Node 18+, MySQL running on `localhost:3306`
 
 3. Open http://localhost:5173
 
-**Reset the sample data:** stop the backend, run `DROP DATABASE homeplate;` in MySQL, start the backend again.
+**Reset the database:** stop the backend, run `DROP DATABASE homeplate;` in MySQL, start the backend again.
 
 ## Business rules implemented
 
@@ -69,10 +69,13 @@ Requirements: JDK 17+ (you have 25), Node 18+, MySQL running on `localhost:3306`
 
 ## Integration points (ready for later)
 
-- **Twilio SMS:** `NotificationService` already calls the Twilio REST API. Set `homeplate.twilio.enabled=true` and the
-  env vars `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, then set `homeplate.dev-otp=false`
-  so OTPs are no longer shown on screen. Until then every SMS is printed in the backend log.
-- **Email:** `NotificationService.sendEmail` (logs today) — plug in Twilio SendGrid.
+- **SMS OTP (live):** Twilio Verify. `application-secrets.yml` holds `homeplate.twilio.account-sid`, either
+  `api-key-sid`/`api-key-secret` or `auth-token`, and `verify-service-sid` (Verify service "HomePlate").
+  Twilio **trial** accounts only deliver to verified testers - add numbers in Twilio Console, or upgrade the account.
+- **Order SMS notifications:** need a Twilio phone number in `homeplate.twilio.from-number`; until then they are only logged.
+- **Email OTP + emails:** set `homeplate.mail.from` + `homeplate.mail.sendgrid-api-key` (Twilio SendGrid), or SMTP via
+  `spring.mail.*` (e.g. Gmail + App Password). Once configured, email verification becomes mandatory at sign-up.
+- **Dev mode:** `DEV_OTP=true` shows the OTP on screen for channels without a provider (never in production).
 - **Payments:** `OrderService.pay` / `SubscriptionService.subscribe` are mock gateways (test mode). Replace with Razorpay
   checkout + signature verification.
 - **File storage:** `FileStorageService` saves to `backend/uploads/`. Swap for S3 / cloud storage.
@@ -96,5 +99,5 @@ frontend/src/
 ## Before going live
 
 - Change the JWT secret (`JWT_SECRET` env var) and the database password; never commit real secrets.
-- Turn off `dev-otp`, connect Twilio and a real payment gateway.
+- Change the `owner` password, upgrade Twilio from trial, configure email, connect a real payment gateway.
 - Food-safety: keep FSSAI verification and periodic inspections as part of the process.

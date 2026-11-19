@@ -11,19 +11,19 @@ const config = {
   customer: {
     image: '/images/veg-leaf-meal.jpg', eyebrow: 'Welcome back', title: 'Missing the taste of home?',
     text: 'Fresh homemade meals from verified home chefs, delivered from kitchens within 5 km of you.',
-    heading: 'Login to HomePlate', demo: { u: 'user', p: 'user' }, home: '/',
+    heading: 'Login to HomePlate', home: '/',
     points: ['Order today\'s homemade menu', 'Request any dish your way', 'Track your order live'],
   },
   kitchen: {
     image: '/images/pan-cooking.jpg', eyebrow: 'Kitchen Partner', title: 'Turn your home kitchen into a business',
     text: 'Publish your daily menu, accept custom requests and grow your earnings - with a 30-day free trial.',
-    heading: 'Kitchen partner login', demo: { u: 'kitchenowner', p: 'kitchenowner' }, home: '/kitchen',
+    heading: 'Kitchen partner login', home: '/kitchen',
     points: ['Daily menu & orders in one place', 'Custom request quotations', 'Earnings & subscription tracking'],
   },
   admin: {
     image: '/images/spices.jpg', eyebrow: 'Super Admin', title: 'Run the HomePlate platform',
     text: 'Verify kitchens, review cooking videos, manage subscriptions and monitor revenue.',
-    heading: 'Admin login', demo: { u: 'owner', p: 'owner' }, home: '/admin',
+    heading: 'Admin login', home: '/admin',
     points: ['KYC & FSSAI verification', 'Cooking video reviews', 'Revenue & commission analytics'],
   },
 } as const;
@@ -77,10 +77,11 @@ export default function LoginPage({ portal }: { portal: 'customer' | 'kitchen' |
         </div>
         <button className="btn-primary w-full py-3" disabled={busy}>{busy ? <Spinner className="h-4 w-4 text-white" /> : <LogIn className="h-4 w-4" />}Login</button>
       </form>
-      <button onClick={() => { setUsername(c.demo.u); setPassword(c.demo.p); }}
-        className="mt-6 w-full rounded-xl border border-dashed border-saffron-300 bg-saffron-50 px-4 py-3 text-left text-xs text-saffron-700 hover:bg-saffron-100">
-        <b>Demo account:</b> {c.demo.u} / {c.demo.p} <span className="float-right font-semibold">Fill →</span>
-      </button>
+      {portal !== 'admin' && (
+        <p className="mt-4 text-center text-sm">
+          <Link to={portal === 'kitchen' ? '/kitchen/forgot-password' : '/forgot-password'} className="font-medium text-brand-700 hover:underline">Forgot password?</Link>
+        </p>
+      )}
       <div className="mt-8 flex flex-wrap justify-center gap-4 text-xs text-charcoal-400">
         {portal !== 'customer' && <Link to="/login" className="hover:text-brand-700">Customer login</Link>}
         {portal !== 'kitchen' && <Link to="/kitchen/login" className="hover:text-brand-700">Kitchen partner login</Link>}

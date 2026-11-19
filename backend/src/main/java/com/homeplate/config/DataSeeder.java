@@ -17,8 +17,9 @@ import java.time.*;
 import java.util.*;
 
 /**
- * Seeds realistic Coimbatore sample data on first start (empty database).
- * Logins: owner/owner (admin), kitchenowner/kitchenowner (kitchen), user/user (customer).
+ * First start (empty database): creates platform settings, subscription plans and the
+ * super admin owner/owner. Kitchens and customers register themselves with OTP.
+ * Optional demo data (homeplate.seed-demo-data=true): sample Coimbatore kitchens, customers and orders.
  */
 @Component
 public class DataSeeder implements CommandLineRunner {
@@ -41,6 +42,9 @@ public class DataSeeder implements CommandLineRunner {
     private final OrderService orderService;
 
     private final Random rnd = new Random(42);
+
+    @org.springframework.beans.factory.annotation.Value("${homeplate.seed-demo-data:false}")
+    private boolean seedDemo;
 
     public DataSeeder(UserRepository users, KitchenRepository kitchens, MenuItemRepository menu, FoodOrderRepository orders,
                       ReviewRepository reviews, CustomRequestRepository requests, QuotationRepository quotes,
@@ -74,7 +78,6 @@ public class DataSeeder implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (users.count() > 0) return;
-        log.info("Seeding HomePlate sample data...");
 
         PlatformSettings settings = settingsRepo.save(new PlatformSettings());
 
@@ -85,12 +88,19 @@ public class DataSeeder implements CommandLineRunner {
         plan("Annual", "Best value for established kitchens", "4999", 365, false,
                 "Everything in Quarterly|Verified Pro badge|Free kitchen photo shoot|Dedicated account manager");
 
+        user("owner", "owner", "Platform Owner", "9000000001", "admin@homeplate.in", Role.ADMIN, null, null, null, null, 200);
+
+        if (!seedDemo) {
+            log.info("HomePlate initialised: super admin 'owner' + subscription plans. No demo data (homeplate.seed-demo-data=false).");
+            return;
+        }
+        log.info("Seeding demo kitchens, customers and orders...");
+
         offer("WELCOME50", "50% off your first homemade meal (max Rs.75)", "50", "75", "149");
         offer("HOMEFOOD10", "10% off on all orders above Rs.199", "10", "50", "199");
         offer("STUDENT20", "20% off for students (max Rs.60)", "20", "60", "120");
 
         // ---------------- users
-        user("owner", "owner", "Platform Owner", "9000000001", "admin@homeplate.in", Role.ADMIN, null, null, null, null, 200);
 
         User arun = user("user", "user", "Arun Kumar", "9876543210", "arun.kumar@example.com", Role.CUSTOMER,
                 "SITRA", "12, Kalapatti Road, near SITRA bus stop, Coimbatore 641014", 11.0335, 77.0310, 150);
