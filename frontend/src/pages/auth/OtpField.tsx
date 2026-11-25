@@ -4,7 +4,18 @@ import toast from 'react-hot-toast';
 import { api, errMsg } from '../../api/client';
 import { Spinner } from '../../components/ui';
 
-export interface OtpConfig { sms: boolean; email: boolean; emailRequired: boolean; devMode: boolean }
+export interface OtpConfig { sms: boolean; email: boolean; emailRequired: boolean; devMode: boolean; testNumbers?: string; testCode?: string }
+
+/** Shown on sign-up pages while test numbers are enabled (never in production). */
+export function TestModeHint({ cfg }: { cfg: OtpConfig | null }) {
+  if (!cfg?.testNumbers) return null;
+  return (
+    <div className="mt-6 rounded-xl border border-dashed border-saffron-300 bg-saffron-50 px-4 py-3 text-xs leading-relaxed text-saffron-800">
+      <b>Test mode:</b> use any mobile number in <b className="whitespace-nowrap">{cfg.testNumbers}</b> with OTP <b className="tracking-widest">{cfg.testCode}</b> (no SMS is sent).
+      Each number can be used for one account - customer or kitchen partner.
+    </div>
+  );
+}
 
 /** Which OTP channels the backend can deliver right now. */
 export function useOtpConfig() {

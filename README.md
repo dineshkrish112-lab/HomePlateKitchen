@@ -78,6 +78,10 @@ Requirements: JDK 17+ (you have 25), Node 18+, MySQL running on `localhost:3306`
 - **Order SMS notifications:** need a Twilio phone number in `homeplate.twilio.from-number`; until then they are only logged.
 - **Email OTP + emails:** set `homeplate.mail.from` + `homeplate.mail.sendgrid-api-key` (Twilio SendGrid), or SMTP via
   `spring.mail.*` (e.g. Gmail + App Password). Once configured, email verification becomes mandatory at sign-up.
+- **Test numbers (on by default):** any mobile `9000000002`-`9000000100` registers with OTP `123456`, no SMS sent -
+  works for customers and kitchen partners (one account per number). Change with `homeplate.otp.test-numbers`
+  (or env `OTP_TEST_NUMBERS`). **Production: set `OTP_TEST_NUMBERS=` (empty).**
+- **Ports:** backend `SERVER_PORT` (default 8090); frontend proxy follows `BACKEND_PORT` (default 8090).
 - **Dev mode:** `DEV_OTP=true` shows the OTP on screen for channels without a provider (never in production).
 - **Payments:** `OrderService.pay` / `SubscriptionService.subscribe` are mock gateways (test mode). Replace with Razorpay
   checkout + signature verification.

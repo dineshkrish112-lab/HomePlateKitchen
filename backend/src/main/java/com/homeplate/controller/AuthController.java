@@ -67,8 +67,16 @@ public class AuthController {
     /** Tells the UI which OTP channels are live. */
     @GetMapping("/otp/config")
     public Map<String, Object> otpConfig() {
-        return Map.of("sms", otp.smsLive(), "email", otp.emailLive(),
-                "emailRequired", otp.emailRequired(), "devMode", otp.devMode());
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("sms", otp.smsLive());
+        m.put("email", otp.emailLive());
+        m.put("emailRequired", otp.emailRequired());
+        m.put("devMode", otp.devMode());
+        if (otp.testNumbersHint() != null) {
+            m.put("testNumbers", otp.testNumbersHint());
+            m.put("testCode", otp.testCode());
+        }
+        return m;
     }
 
     @PostMapping("/otp/send")

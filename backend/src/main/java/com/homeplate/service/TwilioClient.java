@@ -113,8 +113,9 @@ public class TwilioClient {
             case 20404 -> ApiException.badRequest("OTP expired. Please request a new one");
             case 60202, 60203 -> ApiException.badRequest("Too many attempts. Please wait 10 minutes and try again");
             case 60200, 21211, 60205 -> ApiException.badRequest("This mobile number is not valid for SMS");
-            case 21608, 21610, 21408 -> ApiException.badRequest(
-                    "SMS could not be delivered to this number. (Twilio trial accounts can only send to verified numbers.)");
+            case 21608, 21610, 21408, 60410 -> ApiException.badRequest(
+                    "SMS can't be sent to this number yet (Twilio trial account: only verified numbers). "
+                    + "For testing use a test number like 9000000005 with OTP 123456.");
             case 20003 -> ApiException.badRequest("SMS service credentials are invalid. Contact support.");
             default -> ApiException.badRequest("SMS service error: " + msg);
         };

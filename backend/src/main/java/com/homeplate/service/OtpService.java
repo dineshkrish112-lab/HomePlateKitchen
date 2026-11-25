@@ -38,21 +38,45 @@ public class OtpService {
     @Value("${homeplate.dev-otp:false}")
     private boolean devOtp;
 
-    /** Comma separated 10-digit numbers that accept the fixed test code without sending an SMS. Empty in production. */
+    /**
+     * Numbers that accept the fixed test code without sending an SMS, e.g. "9000000002-9000000100" or "9000000002,9000000003".
+     * Set to empty in production.
+     */
     @Value("${homeplate.otp.test-numbers:}")
     private String testNumbersRaw;
 
     @Value("${homeplate.otp.test-code:123456}")
     private String testCode;
 
-    private java.util.Set<String> testNumbers() {
-        java.util.Set<String> s = new java.util.HashSet<>();
-        for (String n : testNumbersRaw.split(",")) {
-            String d = n.replaceAll("[^0-9]", "");
-            if (d.length() >= 10) s.add(d.substring(d.length() - 10));
-        }
-        return s;
+    private static String last10(String s) {
+        String d = s.replaceAll("[^0-9]", "");
+        return d.length() >= 10 ? d.substring(d.length() - 10) : null;
     }
+
+    private boolean isTestNumber(String digits) {
+        if (testNumbersRaw == null || testNumbersRaw.isBlank()) return false;
+        for (String part : testNumbersRaw.split(",")) {
+            String p = part.trim();
+            int dash = p.indexOf('-');
+            if (dash > 0) {
+                String from = last10(p.substring(0, dash)), to = last10(p.substring(dash + 1));
+                if (from != null && to != null) {
+                    long n = Long.parseLong(digits);
+                    if (n >= Long.parseLong(from) && n <= Long.parseLong(to)) return true;
+                }
+            } else if (digits.equals(last10(p))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Text for the sign-up page, e.g. "9000000002-9000000100" (null when test numbers are off). */
+    public String testNumbersHint() {
+        return testNumbersRaw == null || testNumbersRaw.isBlank() ? null : testNumbersRaw.replace(",", ", ");
+    }
+
+    public String testCode() { return testCode; }
 
     public OtpService(TwilioClient twilio, NotificationService notifications) {
         this.twilio = twilio;
@@ -79,7 +103,7 @@ public class OtpService {
         if (last != null && last.plusSeconds(25).isAfter(Instant.now()))
             throw ApiException.badRequest("Please wait a few seconds before requesting another OTP");
 
-        if (ch == Channel.SMS && testNumbers().contains(phoneDigits(rawTarget))) {
+        if (ch == Channel.SMS && isTestNumber(phoneDigits(rawTarget))) {
             log.info("[TEST NUMBER] OTP for {} is the fixed test code (no SMS sent)", key);
             codes.put(key, new Entry(testCode, Instant.now().plusSeconds(600), 0, false));
             lastSent.put(key, Instant.now());

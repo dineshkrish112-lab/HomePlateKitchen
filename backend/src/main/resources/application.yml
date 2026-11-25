@@ -1,5 +1,5 @@
 server:
-  port: 8090
+  port: ${SERVER_PORT:8090}
 
 spring:
   config:
@@ -38,8 +38,10 @@ homeplate:
   # Keep false in production so registration always needs a real SMS / email.
   dev-otp: ${DEV_OTP:false}
   otp:
-    # Testing only: these numbers skip Twilio and accept test-code. Keep EMPTY in production.
-    test-numbers: ${OTP_TEST_NUMBERS:}
+    # Test numbers: register as customer or kitchen partner with OTP test-code, no SMS sent.
+    # Ranges ("a-b") and lists ("a,b,c") both work.
+    # PRODUCTION: set OTP_TEST_NUMBERS to an empty value so only real SMS OTP is accepted.
+    test-numbers: ${OTP_TEST_NUMBERS:9000000002-9000000100}
     test-code: ${OTP_TEST_CODE:123456}
   # Fills the database with sample kitchens, customers and orders (demo only). Production: false.
   seed-demo-data: ${SEED_DEMO_DATA:false}
@@ -60,7 +62,7 @@ homeplate:
     from: ${MAIL_FROM:}
     from-name: HomePlate
     sendgrid-api-key: ${SENDGRID_API_KEY:}
-  cors-origins: http://localhost:5173,http://127.0.0.1:5173
+  cors-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:9003,http://127.0.0.1:9003}
 
 logging:
   level:

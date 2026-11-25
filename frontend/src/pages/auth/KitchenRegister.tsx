@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import AuthShell from './AuthShell';
-import OtpField, { useOtpConfig } from './OtpField';
+import OtpField, { TestModeHint, useOtpConfig } from './OtpField';
 import { api, errMsg } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { Spinner } from '../../components/ui';
@@ -43,7 +43,8 @@ export default function KitchenRegister() {
       <p className="text-xs font-bold uppercase tracking-widest text-saffron-600">Step 1 of 6</p>
       <h1 className="mt-1 font-display text-3xl font-semibold">Register your kitchen</h1>
       <p className="mt-2 text-sm text-charcoal-500">Already registered? <Link to="/kitchen/login" className="font-semibold text-brand-700">Login</Link></p>
-      <form onSubmit={submit} className="mt-8 space-y-4">
+      <TestModeHint cfg={cfg} />
+      <form onSubmit={submit} className="mt-6 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div><label className="label">Owner name</label><input className="input" required value={f.fullName} onChange={set('fullName')} placeholder="Your full name" /></div>
           <div><label className="label">Kitchen name</label><input className="input" required value={f.kitchenName} onChange={set('kitchenName')} placeholder="e.g. Amma's Kitchen" /></div>

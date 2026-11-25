@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import AuthShell from './AuthShell';
-import OtpField, { useOtpConfig } from './OtpField';
+import OtpField, { TestModeHint, useOtpConfig } from './OtpField';
 import { api, errMsg } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { Spinner } from '../../components/ui';
@@ -41,7 +41,8 @@ export default function CustomerRegister() {
       points={['Verified home kitchens within 5 km', 'Food from your hometown - Madurai, Kerala, Andhra…', 'Affordable everyday meals']}>
       <h1 className="font-display text-3xl font-semibold">Create your account</h1>
       <p className="mt-2 text-sm text-charcoal-500">Already have one? <Link to="/login" className="font-semibold text-brand-700">Login</Link></p>
-      <form onSubmit={submit} className="mt-8 space-y-4">
+      <TestModeHint cfg={cfg} />
+      <form onSubmit={submit} className="mt-6 space-y-4">
         <div><label className="label">Full name</label><input className="input" required value={f.fullName} onChange={set('fullName')} placeholder="Your full name" /></div>
         <OtpField channel="sms" value={phone} setValue={setPhone} verified={phoneOk} setVerified={setPhoneOk} />
         {emailNeeded
