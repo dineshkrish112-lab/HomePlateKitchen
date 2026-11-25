@@ -39,7 +39,7 @@ public class OtpService {
     private boolean devOtp;
 
     /**
-     * Numbers that accept the fixed test code without sending an SMS, e.g. "9000000002-9000000100" or "9000000002,9000000003".
+     * Numbers that accept the fixed test code without sending an SMS, e.g. "9000000002-9000000999" or "9000000002,9000000003".
      * Set to empty in production.
      */
     @Value("${homeplate.otp.test-numbers:}")
@@ -71,7 +71,7 @@ public class OtpService {
         return false;
     }
 
-    /** Text for the sign-up page, e.g. "9000000002-9000000100" (null when test numbers are off). */
+    /** Text for the sign-up page, e.g. "9000000002-9000000999" (null when test numbers are off). */
     public String testNumbersHint() {
         return testNumbersRaw == null || testNumbersRaw.isBlank() ? null : testNumbersRaw.replace(",", ", ");
     }

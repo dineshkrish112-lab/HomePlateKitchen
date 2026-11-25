@@ -41,7 +41,7 @@ homeplate:
     # Test numbers: register as customer or kitchen partner with OTP test-code, no SMS sent.
     # Ranges ("a-b") and lists ("a,b,c") both work.
     # PRODUCTION: set OTP_TEST_NUMBERS to an empty value so only real SMS OTP is accepted.
-    test-numbers: ${OTP_TEST_NUMBERS:9000000002-9000000100}
+    test-numbers: ${OTP_TEST_NUMBERS:9000000002-9000000999}
     test-code: ${OTP_TEST_CODE:123456}
   # Fills the database with sample kitchens, customers and orders (demo only). Production: false.
   seed-demo-data: ${SEED_DEMO_DATA:false}
